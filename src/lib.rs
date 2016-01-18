@@ -30,13 +30,15 @@ quick_error! {
 pub struct IconScraper {
     pub document_url: url::Url,
     pub dom: Option<kuchiki::NodeRef>,
+    pub icons: Vec<Icon>
 }
 
 impl IconScraper {
     pub fn from_url(url: url::Url) -> Self {
         IconScraper {
             document_url: url,
-            dom: None
+            dom: None,
+            icons: vec![];
         }
     }
 
@@ -48,25 +50,30 @@ impl IconScraper {
         Ok(())
     }
 
-    pub fn icons_by_size(mut self) -> Vec<Icon> {
-        let mut guesses = strategies::LinkRelStrategy.get_guesses(&mut self)
+    pub fn fetch_icons(&mut self) {
+        self.icons = strategies::LinkRelStrategy.get_guesses(&mut self)
             .into_iter()
             .chain(strategies::DefaultFaviconPathStrategy.get_guesses(&mut self).into_iter())
             .filter_map(|mut icon| if icon.fetch_dimensions().is_ok() { Some(icon) } else { None })
             .collect::<Vec<_>>();
 
-        guesses.sort_by(|a, b| {
+        self.icons.sort_by(|a, b| {
             (a.width.unwrap() * a.height.unwrap())
                 .cmp(&(b.width.unwrap() * b.height.unwrap()))
         });
-        guesses
     }
 
     pub fn at_least(self, width: u32, height: u32) -> Option<Icon> {
-        self.icons_by_size()
+        self.icons
             .into_iter()
             .skip_while(|icon| icon.width.unwrap() < width || icon.height.unwrap() < height)
             .next()
+    }
+
+    pub fn largest(self) -> Option<Icon> {
+        if self.icons.len() > 0 {
+            Some(self.icons[self.icons.len() - 1])
+        }
     }
 }
 
