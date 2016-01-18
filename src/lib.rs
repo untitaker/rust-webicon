@@ -51,16 +51,17 @@ impl IconScraper {
     }
 
     pub fn fetch_icons(&mut self) {
-        self.icons = strategies::LinkRelStrategy.get_guesses(&mut self)
+        let mut icons = strategies::LinkRelStrategy.get_guesses(self)
             .into_iter()
-            .chain(strategies::DefaultFaviconPathStrategy.get_guesses(&mut self).into_iter())
+            .chain(strategies::DefaultFaviconPathStrategy.get_guesses(self).into_iter())
             .filter_map(|mut icon| if icon.fetch_dimensions().is_ok() { Some(icon) } else { None })
             .collect::<Vec<_>>();
 
-        self.icons.sort_by(|a, b| {
+        icons.sort_by(|a, b| {
             (a.width.unwrap() * a.height.unwrap())
                 .cmp(&(b.width.unwrap() * b.height.unwrap()))
         });
+        self.icons = icons;
     }
 
     pub fn at_least(self, width: u32, height: u32) -> Option<Icon> {
@@ -70,12 +71,8 @@ impl IconScraper {
             .next()
     }
 
-    pub fn largest(self) -> Option<Icon> {
-        if self.icons.len() > 0 {
-            Some(self.icons[self.icons.len() - 1])
-        } else {
-            None
-        }
+    pub fn largest(mut self) -> Option<Icon> {
+        self.icons.pop()
     }
 }
 
