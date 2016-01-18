@@ -1,0 +1,18 @@
+[package]
+name = "webicon"
+version = "0.1.0"
+authors = ["Markus Unterwaditzer <markus@unterwaditzer.net>"]
+
+description = "Favicon and apple-touch-icon scraper for Rust"
+documentation = "http://rust-webicon.unterwaditzer.net/"
+homepage = "http://rust-webicon.unterwaditzer.net/"
+repository = "https://github.com/untitaker/rust-webicon"
+
+[dependencies]
+kuchiki = "*"
+hyper = "*"
+url = "*"
+quick-error = "*"
+image = "*"
+mime = "*"
+string_cache = "*"
