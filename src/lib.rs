@@ -8,7 +8,6 @@ extern crate image;
 
 mod strategies;
 mod util;
-#[cfg(feature = "webapp")] mod webapp;
 
 use image::GenericImage;
 use strategies::Strategy;
