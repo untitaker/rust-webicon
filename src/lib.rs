@@ -96,6 +96,10 @@ impl Icon {
     }
 
     pub fn fetch(&mut self) -> Result<(), Error> {
+        if self.raw.is_some() {
+            return Ok(());
+        };
+
         let client = hyper::client::Client::new();
         let mut response = try!(client.get(self.url.clone()).send());
 
