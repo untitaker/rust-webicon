@@ -18,7 +18,8 @@ impl DefaultFaviconPathStrategy {
                 path.push("favicon.ico".to_owned());
             }
 
-            let icon = Icon { url: current.clone(), width: None, height: None, image: None };
+            let icon = Icon::from_url(current.clone());
+
             rv.push(icon);
 
             {
@@ -68,11 +69,11 @@ impl Strategy for LinkRelStrategy {
                     _ => return None
                 };
 
-                Some(Icon {
-                    url: icon_url,
-                    width: x,
-                    height: y,
-                    image: None
+                Some({
+                    let mut icon = Icon::from_url(icon_url);
+                    icon.width = x;
+                    icon.height = y;
+                    icon
                 })
             })
             .collect()

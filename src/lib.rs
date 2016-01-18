@@ -72,12 +72,23 @@ impl IconScraper {
 
 pub struct Icon {
     pub url: url::Url,
-    pub image: Option<image::DynamicImage>,
+    pub raw: Option<Vec<u8>>,
+    pub mime_type: Option<mime::Mime>,
     pub width: Option<u32>,
     pub height: Option<u32>
 }
 
 impl Icon {
+    pub fn from_url(url: url::Url) -> Self {
+        Icon {
+            url: url,
+            raw: None,
+            mime_type: None,
+            width: None,
+            height: None
+        }
+    }
+
     pub fn fetch(&mut self) -> Result<(), Error> {
         let client = hyper::client::Client::new();
         let mut response = try!(client.get(self.url.clone()).send());
@@ -88,19 +99,21 @@ impl Icon {
             return Err(Error::Other(format!("Bad status code: {:?}", response.status)));
         }
 
-        let image_format_opt = response.headers.get::<hyper::header::ContentType>()
-            .and_then(|x| x.as_image_format());
-
-        let image = try!(if let Some(image_format) = image_format_opt {
-            image::load_from_memory_with_format(&bytes, image_format)
-        } else {
-            image::load_from_memory(&bytes)
-        });
+        let mime_type: mime::Mime = match response.headers.get::<hyper::header::ContentType>() {
+            Some(x) => x.clone().0,
+            None => return Err(Error::Other("No Content-Type found.".to_owned()))
+        };
+        let image_format = match mime_type.as_image_format() {
+            Some(x) => x,
+            None => return Err(Error::Other(format!("Invalid image type: {:?}", mime_type)))
+        };
+        let image = try!(image::load_from_memory_with_format(&bytes, image_format));
 
 
         self.width = Some(image.width());
         self.height = Some(image.height());
-        self.image = Some(image);
+        self.raw = Some(bytes);
+        self.mime_type = Some(mime_type);
         Ok(())
     }
 
