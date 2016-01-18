@@ -38,7 +38,7 @@ impl IconScraper {
         IconScraper {
             document_url: url,
             dom: None,
-            icons: vec![];
+            icons: vec![]
         }
     }
 
