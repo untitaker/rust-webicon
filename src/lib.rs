@@ -73,6 +73,8 @@ impl IconScraper {
     pub fn largest(self) -> Option<Icon> {
         if self.icons.len() > 0 {
             Some(self.icons[self.icons.len() - 1])
+        } else {
+            None
         }
     }
 }
