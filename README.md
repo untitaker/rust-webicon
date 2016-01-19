@@ -15,8 +15,8 @@ Usage:
     let mut scraper = IconScraper::from_url("http://twitter.com").unwrap();
     let icons = scraper.fetch_icons();
 
-    scraper.at_least(128, 128);  // Return icon that is at least 128x128 pixels large
-    scraper.largest();  // Just return the largest one.
+    icons.at_least(128, 128);  // Return icon that is at least 128x128 pixels large
+    icons.largest();  // Just return the largest one.
 
 Read more in the [docs](https://rust-webicon.unterwaditzer.net/).
 
