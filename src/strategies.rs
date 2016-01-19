@@ -19,7 +19,6 @@ impl DefaultFaviconPathStrategy {
             }
 
             let icon = Icon::from_url(current.clone());
-
             rv.push(icon);
 
             {
@@ -50,7 +49,7 @@ impl Strategy for LinkRelStrategy {
         parser.dom.as_ref().unwrap().select("link[rel=icon], link[rel=apple-touch-icon]").unwrap()
             .filter_map(|data| {
                 let attrs = data.attributes.borrow();
-                let href = match attrs.get(&qualname!("", "href")) {
+                let href = match attrs.get(atom!("href")) {
                     Some(x) => x,
                     None => return None
                 };
@@ -59,7 +58,7 @@ impl Strategy for LinkRelStrategy {
                     Err(_) => return None
                 };
 
-                let mut sizes = match attrs.get(&qualname!("", "sizes")) {
+                let mut sizes = match attrs.get(atom!("sizes")) {
                     Some(s) => s.split('x').filter_map(|d| u32::from_str(d).ok()),
                     None => return None
                 };
