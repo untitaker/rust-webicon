@@ -46,7 +46,7 @@ impl Strategy for DefaultFaviconPathStrategy {
 pub struct LinkRelStrategy;
 impl Strategy for LinkRelStrategy {
     fn get_guesses(self, parser: &mut IconScraper) -> Vec<Icon> {
-        parser.dom.as_ref().unwrap().select("link[rel=icon], link[rel=apple-touch-icon]").unwrap()
+        parser.dom.select("link[rel=icon], link[rel=apple-touch-icon]").unwrap()
             .filter_map(|data| {
                 let attrs = data.attributes.borrow();
                 let href = match attrs.get(atom!("href")) {
@@ -82,9 +82,12 @@ impl Strategy for LinkRelStrategy {
 #[test]
 fn test_default_favicon_paths() {
     use url;
-    let mut x = IconScraper::from_url(
-        url::Url::parse("http://example.com/a/b/c/d/e/f").unwrap()
-    );
+    use kuchiki;
+
+    let mut x = IconScraper {
+        document_url: url::Url::parse("http://example.com/a/b/c/d/e/f").unwrap(),
+        dom: kuchiki::Html::from_string("<!DOCTYPE html>").parse()
+    };
     let s = DefaultFaviconPathStrategy;
     let paths = s.get_uneducated_guesses(&mut x)
         .into_iter()

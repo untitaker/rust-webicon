@@ -30,42 +30,63 @@ quick_error! {
 
 
 pub struct IconScraper {
-    pub document_url: url::Url,
-    pub dom: Option<kuchiki::NodeRef>,
-    pub icons: Vec<Icon>
+    document_url: url::Url,
+    dom: kuchiki::NodeRef,
 }
 
 impl IconScraper {
-    pub fn from_url(url: url::Url) -> Self {
+    pub fn from_url(url: url::Url) -> Result<Self, Error> {
+        let client = hyper::client::Client::new();
+        let mut response = try!(client.get(url.clone()).send());
+        Ok(try!(IconScraper::from_url_and_stream(url, &mut response)))
+    }
+
+    pub fn from_url_and_stream<R: Read>(url: url::Url, stream: &mut R) -> Result<Self, std::io::Error> {
+        let parser = try!(kuchiki::Html::from_stream(stream));
+        Ok(IconScraper::from_url_and_dom(url, parser.parse()))
+    }
+
+    pub fn from_url_and_dom(url: url::Url, dom: kuchiki::NodeRef) -> Self {
         IconScraper {
             document_url: url,
-            dom: None,
-            icons: vec![]
+            dom: dom
         }
     }
 
-    pub fn fetch_document(&mut self) -> Result<(), Error> {
-        let client = hyper::client::Client::new();
-        let mut response = try!(client.get(self.document_url.clone()).send());
-        let parser = try!(kuchiki::Html::from_stream(&mut response));
-        self.dom = Some(parser.parse());
-        Ok(())
-    }
-
-    pub fn fetch_icons(&mut self) {
-        let mut icons = strategies::LinkRelStrategy.get_guesses(self)
+    /// Search the document for icon metadata, also brute-force some favicon paths.
+    ///
+    /// **Note:** This operation is fairly costly, it is recommended to cache the results!
+    ///
+    /// # Panics
+    ///
+    /// If the document is not fetched yet.
+    pub fn fetch_icons(&mut self) -> IconCollection {
+        let icons = strategies::LinkRelStrategy.get_guesses(self)
             .into_iter()
             .chain(strategies::DefaultFaviconPathStrategy.get_guesses(self).into_iter())
             .filter_map(|mut icon| if icon.fetch_dimensions().is_ok() { Some(icon) } else { None })
             .collect::<Vec<_>>();
 
+        IconCollection::from_raw(icons)
+    }
+}
+
+pub struct IconCollection {
+    icons: Vec<Icon>
+}
+
+impl IconCollection {
+    fn from_raw(mut icons: Vec<Icon>) -> Self {
         icons.sort_by(|a, b| {
             (a.width.unwrap() * a.height.unwrap())
                 .cmp(&(b.width.unwrap() * b.height.unwrap()))
         });
-        self.icons = icons;
+        IconCollection {
+            icons: icons
+        }
     }
 
+    /// Return an icon that is at least of the given dimensions
     pub fn at_least(self, width: u32, height: u32) -> Option<Icon> {
         self.icons
             .into_iter()
@@ -73,8 +94,15 @@ impl IconScraper {
             .next()
     }
 
+    /// Return the largest icon
     pub fn largest(mut self) -> Option<Icon> {
         self.icons.pop()
+    }
+
+    /// [unstable] Give up ownership of the inner datastructure: A vector of icons, sorted
+    /// ascendingly by size
+    pub fn into_raw_parts(self) -> Vec<Icon> {
+        self.icons
     }
 }
 
