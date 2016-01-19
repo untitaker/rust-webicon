@@ -1,3 +1,5 @@
+// DOCS
+
 #[macro_use] extern crate quick_error;
 #[macro_use] extern crate string_cache;
 extern crate mime;

@@ -1,11 +1,15 @@
 [package]
 name = "webicon"
 version = "0.1.0"
+
 authors = ["Markus Unterwaditzer <markus@unterwaditzer.net>"]
+license = "MIT"
+keywords = ["web", "favicon", "scraper", "html"]
+readme = "README.md"
 
 description = "Favicon and apple-touch-icon scraper for Rust"
-documentation = "http://rust-webicon.unterwaditzer.net/"
-homepage = "http://rust-webicon.unterwaditzer.net/"
+documentation = "https://rust-webicon.unterwaditzer.net/"
+homepage = "https://rust-webicon.unterwaditzer.net/"
 repository = "https://github.com/untitaker/rust-webicon"
 
 [dependencies]
