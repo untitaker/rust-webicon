@@ -1,5 +1,7 @@
 # rust-webicon
 
+[![Build Status](https://travis-ci.org/untitaker/rust-webicon.svg?branch=master)](https://travis-ci.org/untitaker/rust-webicon)
+
 A library for scraping a website's icon.
 
 Usage:
