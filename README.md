@@ -2,6 +2,9 @@
 
 [![Build Status](https://travis-ci.org/untitaker/rust-webicon.svg?branch=master)](https://travis-ci.org/untitaker/rust-webicon)
 
+* [Repository](https://github.com/untitaker/rust-webicon)
+* [Documentation](https://rust-webicon.unterwaditzer.net/webicon/)
+
 A library for scraping a website's icon.
 
 Usage:
