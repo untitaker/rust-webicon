@@ -91,11 +91,18 @@ impl IconCollection {
     }
 
     /// Return an icon that is at least of the given dimensions
+    ///
+    /// If there's only one icon available, it will return that icon. If there's no icon available,
+    /// None is returned.
     pub fn at_least(self, width: u32, height: u32) -> Option<Icon> {
-        self.icons
-            .into_iter()
-            .skip_while(|icon| icon.width.unwrap() < width || icon.height.unwrap() < height)
-            .next()
+        if self.icons.len() > 1 {
+            self.icons
+                .into_iter()
+                .skip_while(|icon| icon.width.unwrap() < width || icon.height.unwrap() < height)
+                .next()
+        } else {
+            self.largest()
+        }
     }
 
     /// Return the largest icon
