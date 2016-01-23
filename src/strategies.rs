@@ -26,7 +26,7 @@ impl Strategy for LinkRelStrategy {
             None => return rv
         };
 
-        for data in dom.select("link[rel=icon], link[rel=apple-touch-icon]").unwrap() {
+        for data in dom.select("link[rel~=icon]").unwrap() {
             let attrs = data.attributes.borrow();
             let href = match attrs.get(atom!("href")) {
                 Some(x) => x,
