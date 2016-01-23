@@ -9,7 +9,7 @@ pub struct DefaultFaviconPathStrategy;
 impl Strategy for DefaultFaviconPathStrategy {
     fn get_guesses(self, parser: &mut IconScraper) -> Vec<Icon> {
         let mut icon = Icon::from_url(parser.document_url.join("/favicon.ico").unwrap());
-        if icon.fetch_dimensions().is_ok() {
+        if icon.fetch().is_ok() {
             vec![icon]
         } else {
             vec![]
