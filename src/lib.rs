@@ -94,15 +94,13 @@ impl IconCollection {
     ///
     /// If there's only one icon available, it will return that icon. If there's no icon available,
     /// None is returned.
-    pub fn at_least(self, width: u32, height: u32) -> Option<Icon> {
-        if self.icons.len() > 1 {
-            self.icons
-                .into_iter()
-                .skip_while(|icon| icon.width.unwrap() < width || icon.height.unwrap() < height)
-                .next()
-        } else {
-            self.largest()
-        }
+    pub fn at_least(mut self, width: u32, height: u32) -> Option<Icon> {
+        let largest = self.icons.pop();
+        self.icons
+            .into_iter()
+            .skip_while(|icon| icon.width.unwrap() < width || icon.height.unwrap() < height)
+            .next()
+            .or(largest)
     }
 
     /// Return the largest icon
