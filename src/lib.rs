@@ -31,25 +31,29 @@ quick_error! {
 
 pub struct IconScraper {
     document_url: url::Url,
-    dom: kuchiki::NodeRef,
+    dom: Option<kuchiki::NodeRef>,
 }
 
 impl IconScraper {
-    pub fn from_url(url: url::Url) -> Result<Self, Error> {
+    pub fn from_url(url: url::Url) -> Self {
         let client = hyper::client::Client::new();
-        let mut response = try!(client.get(url.clone()).send());
-        Ok(try!(IconScraper::from_url_and_stream(url, &mut response)))
+        let mut response = client.get(url.clone()).send().ok();
+        IconScraper::from_url_and_stream(url, response.as_mut())
     }
 
-    pub fn from_url_and_stream<R: Read>(url: url::Url, stream: &mut R) -> Result<Self, std::io::Error> {
-        let parser = try!(kuchiki::Html::from_stream(stream));
-        Ok(IconScraper::from_url_and_dom(url, parser.parse()))
+    pub fn from_url_and_stream<R: Read>(url: url::Url, stream: Option<&mut R>) -> Self {
+        IconScraper {
+            document_url: url,
+            dom: stream
+                .and_then(|stream| kuchiki::Html::from_stream(stream).ok())
+                .map(|x| x.parse())
+        }
     }
 
     pub fn from_url_and_dom(url: url::Url, dom: kuchiki::NodeRef) -> Self {
         IconScraper {
             document_url: url,
-            dom: dom
+            dom: Some(dom)
         }
     }
 
