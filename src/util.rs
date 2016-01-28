@@ -12,7 +12,7 @@ impl AsImageFormat for Mime {
             Mime(TopLevel::Image, SubLevel::Png, _) => (self.clone(), image::ImageFormat::PNG),
             Mime(TopLevel::Image, SubLevel::Jpeg, _) => (self.clone(), image::ImageFormat::JPEG),
             Mime(TopLevel::Image, SubLevel::Gif, _) => (self.clone(), image::ImageFormat::GIF),
-            Mime(_, SubLevel::Ext(ref i), _) if i == "x-icon" => (
+            Mime(_, SubLevel::Ext(ref i), _) if i == "x-icon" || i == "vnd.microsoft.icon" => (
                 Mime(TopLevel::Image, SubLevel::Ext("x-icon".into()), vec![]),
                 image::ImageFormat::ICO
             ),
