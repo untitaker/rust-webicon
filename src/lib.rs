@@ -141,7 +141,7 @@ impl Icon {
             Some(x) => x.clone().0,
             None => return Err(Error::Other("No Content-Type found.".to_owned()))
         };
-        let image_format = match mime_type.as_image_format() {
+        let (better_mime_type, image_format) = match mime_type.parse_image_format() {
             Some(x) => x,
             None => return Err(Error::Other(format!("Invalid image type: {:?}", mime_type)))
         };
@@ -151,7 +151,7 @@ impl Icon {
         self.width = Some(image.width());
         self.height = Some(image.height());
         self.raw = Some(bytes);
-        self.mime_type = Some(mime_type);
+        self.mime_type = Some(better_mime_type);
         Ok(())
     }
 
