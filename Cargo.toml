@@ -13,7 +13,7 @@ homepage = "https://rust-webicon.unterwaditzer.net/"
 repository = "https://github.com/untitaker/rust-webicon"
 
 [dependencies]
-kuchiki = "*"
+kuchiki = { version = "0.3", features = ["hyper"] }
 hyper = "*"
 url = "*"
 quick-error = "*"

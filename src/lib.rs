@@ -11,6 +11,9 @@ extern crate image;
 mod strategies;
 mod util;
 
+use kuchiki::traits::*;
+use kuchiki::parse_html;
+
 use image::GenericImage;
 use strategies::Strategy;
 use std::io::Read;
@@ -35,25 +38,11 @@ pub struct IconScraper {
 }
 
 impl IconScraper {
-    pub fn from_url(url: url::Url) -> Self {
-        let client = hyper::client::Client::new();
-        let mut response = client.get(url.clone()).send().ok();
-        IconScraper::from_url_and_stream(url, response.as_mut())
-    }
-
-    pub fn from_url_and_stream<R: Read>(url: url::Url, stream: Option<&mut R>) -> Self {
+    pub fn from_http(url: url::Url) -> Self {
+        let dom = parse_html().from_http(url.clone()).ok();
         IconScraper {
             document_url: url,
-            dom: stream
-                .and_then(|stream| kuchiki::Html::from_stream(stream).ok())
-                .map(|x| x.parse())
-        }
-    }
-
-    pub fn from_url_and_dom(url: url::Url, dom: kuchiki::NodeRef) -> Self {
-        IconScraper {
-            document_url: url,
-            dom: Some(dom)
+            dom: dom
         }
     }
 
