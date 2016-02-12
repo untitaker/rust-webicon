@@ -14,6 +14,8 @@ mod util;
 use kuchiki::traits::*;
 use kuchiki::parse_html;
 
+use hyper::client::IntoUrl;
+
 use image::GenericImage;
 use strategies::Strategy;
 use std::io::Read;
@@ -38,7 +40,8 @@ pub struct IconScraper {
 }
 
 impl IconScraper {
-    pub fn from_http(url: url::Url) -> Self {
+    pub fn from_http<I: IntoUrl>(url: I) -> Self {
+        let url = url.into_url().unwrap();
         let dom = parse_html().from_http(url.clone()).ok();
         IconScraper {
             document_url: url,

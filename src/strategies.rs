@@ -1,6 +1,7 @@
 use super::{Icon,IconScraper};
 use std::str::FromStr;
 
+
 pub trait Strategy {
     fn get_guesses(self, &mut IconScraper) -> Vec<Icon>;
 }
@@ -26,25 +27,26 @@ impl Strategy for LinkRelStrategy {
             None => return rv
         };
 
-        for data in dom.select("link[rel~=icon]").unwrap() {
+        for data in dom.select("link[rel*=icon]").unwrap() {
             let attrs = data.attributes.borrow();
             let href = match attrs.get(atom!("href")) {
                 Some(x) => x,
                 None => continue
             };
+
             let icon_url = match parser.document_url.join(href) {
                 Ok(x) => x,
                 Err(_) => continue
             };
 
-            let mut sizes = match attrs.get(atom!("sizes")) {
-                Some(s) => s.split('x').filter_map(|d| u32::from_str(d).ok()),
-                None => continue
-            };
-                
+            let mut sizes = attrs.get(atom!("sizes"))
+                .unwrap_or("")
+                .split('x')
+                .filter_map(|d| u32::from_str(d).ok());
+
             let (x, y) = match (sizes.next(), sizes.next()) {
                 (Some(x), Some(y)) => (Some(x), Some(y)),
-                _ => continue
+                _ => (None, None)
             };
 
             rv.push({
@@ -56,5 +58,35 @@ impl Strategy for LinkRelStrategy {
         };
 
         rv
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::IconScraper;
+
+    use url;
+    use kuchiki;
+    use kuchiki::traits::*;
+
+    #[test]
+    fn test_apple_touch_icon_without_size_attr() {
+        // laverna.cc does this.
+        let mut scraper = IconScraper {
+            document_url: url::Url::parse("http://example.com/").unwrap(),
+            dom: Some(kuchiki::parse_html().one("<!DOCTYPE html>
+            <html>
+                <head>
+                    <link rel=apple-touch-icon href=apple-touch-icon.png>
+                </head>
+                <body></body>
+            </html>
+            "))
+        };
+
+        let mut icons = LinkRelStrategy.get_guesses(&mut scraper);
+        assert_eq!(icons.len(), 1);
+        assert_eq!(icons.pop().unwrap().url, url::Url::parse("http://example.com/apple-touch-icon.png").unwrap());
     }
 }
