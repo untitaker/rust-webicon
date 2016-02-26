@@ -89,4 +89,10 @@ mod tests {
         assert_eq!(icons.len(), 1);
         assert_eq!(icons.pop().unwrap().url, url::Url::parse("http://example.com/apple-touch-icon.png").unwrap());
     }
+
+    #[test]
+    fn test_sharesome() {
+        let mut scraper = IconScraper::from_http("https://sharesome.5apps.com/");
+        assert_eq!(scraper.fetch_icons().largest().unwrap().url, url::Url::parse("https://sharesome.5apps.com/application_icon_x512.png").unwrap());
+    }
 }
