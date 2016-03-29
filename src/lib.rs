@@ -21,6 +21,13 @@ use strategies::Strategy;
 use std::io::Read;
 use util::AsImageFormat;
 
+#[inline]
+fn accept_identity_encoding() -> hyper::header::AcceptEncoding {
+    use hyper::header::{AcceptEncoding, Encoding, qitem};
+    AcceptEncoding(vec![qitem(Encoding::Identity)])
+}
+
+
 quick_error! {
     #[derive(Debug)]
     pub enum Error {
@@ -41,8 +48,17 @@ pub struct IconScraper {
 
 impl IconScraper {
     pub fn from_http<I: IntoUrl>(url: I) -> Self {
+        use hyper::Client;
+
         let url = url.into_url().unwrap();
-        let dom = parse_html().from_http(url.clone()).ok();
+        let dom = {
+            let client = Client::new();
+            client.get(url.clone())
+                .header(accept_identity_encoding())
+                .send()
+                .and_then(|r| parse_html().from_http(r)).ok()
+        };
+
         IconScraper {
             document_url: url,
             dom: dom
@@ -132,7 +148,10 @@ impl Icon {
         };
 
         let client = hyper::client::Client::new();
-        let mut response = try!(client.get(self.url.clone()).send());
+        let mut response = try!(client
+                                .get(self.url.clone())
+                                .header(accept_identity_encoding())
+                                .send());
 
         let mut bytes: Vec<u8> = vec![];
         try!(response.read_to_end(&mut bytes));
