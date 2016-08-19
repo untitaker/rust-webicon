@@ -1,6 +1,6 @@
 [package]
 name = "webicon"
-version = "0.2.2-pre"
+version = "0.3.0"
 
 authors = ["Markus Unterwaditzer <markus@unterwaditzer.net>"]
 license = "MIT"
