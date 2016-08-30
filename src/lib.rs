@@ -1,6 +1,6 @@
 // DOCS
 
-#[macro_use] extern crate quick_error;
+#[macro_use] extern crate error_chain;
 #[macro_use] extern crate string_cache;
 extern crate mime;
 extern crate hyper;
@@ -10,6 +10,9 @@ extern crate image;
 
 mod strategies;
 mod util;
+pub mod errors;
+
+use errors::*;
 
 use kuchiki::traits::*;
 use kuchiki::parse_html;
@@ -25,19 +28,6 @@ use util::AsImageFormat;
 fn accept_identity_encoding() -> hyper::header::AcceptEncoding {
     use hyper::header::{AcceptEncoding, Encoding, qitem};
     AcceptEncoding(vec![qitem(Encoding::Identity)])
-}
-
-
-quick_error! {
-    #[derive(Debug)]
-    pub enum Error {
-        Hyper(error: hyper::Error) { from() }
-        Io(error: std::io::Error) { from() }
-        Image(error: image::ImageError) { from() }
-        Other(msg: String) {
-            description(msg)
-        }
-    }
 }
 
 
@@ -142,7 +132,7 @@ impl Icon {
         }
     }
 
-    pub fn fetch(&mut self) -> Result<(), Error> {
+    pub fn fetch(&mut self) -> Result<()> {
         if self.raw.is_some() {
             return Ok(());
         };
@@ -156,16 +146,16 @@ impl Icon {
         let mut bytes: Vec<u8> = vec![];
         try!(response.read_to_end(&mut bytes));
         if !response.status.is_success() {
-            return Err(Error::Other(format!("Bad status code: {:?}", response.status)));
+            return Err(ErrorKind::BadStatusCode(response).into());
         }
 
-        let mime_type: mime::Mime = match response.headers.get::<hyper::header::ContentType>() {
-            Some(x) => x.clone().0,
-            None => return Err(Error::Other("No Content-Type found.".to_owned()))
+        let mime_type: mime::Mime = match response.headers.get::<hyper::header::ContentType>().cloned() {
+            Some(x) => x.0,
+            None => return Err(ErrorKind::NoContentType(response).into())
         };
         let (better_mime_type, image_format) = match mime_type.parse_image_format() {
             Some(x) => x,
-            None => return Err(Error::Other(format!("Invalid image type: {:?}", mime_type)))
+            None => return Err(ErrorKind::BadContentType(response).into())
         };
         let image = try!(image::load_from_memory_with_format(&bytes, image_format));
 
@@ -177,7 +167,7 @@ impl Icon {
         Ok(())
     }
 
-    pub fn fetch_dimensions(&mut self) -> Result<(), Error> {
+    pub fn fetch_dimensions(&mut self) -> Result<()> {
         match (self.width, self.height) {
             (Some(_), Some(_)) => Ok(()),
             _ => self.fetch()

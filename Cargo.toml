@@ -16,7 +16,7 @@ repository = "https://github.com/untitaker/rust-webicon"
 kuchiki = { version = "0.3", features = ["hyper"] }
 hyper = "0.9"
 url = "1"
-quick-error = "1"
+error-chain = "0.5"
 image = "0.10"
 mime = "0.2"
 string_cache = "0.2"
