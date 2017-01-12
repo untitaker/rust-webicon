@@ -1,12 +1,13 @@
 // DOCS
 
 #[macro_use] extern crate error_chain;
-#[macro_use] extern crate string_cache;
+#[macro_use] extern crate html5ever_atoms;
 extern crate mime;
-extern crate hyper;
+extern crate reqwest;
 extern crate url;
 extern crate kuchiki;
 extern crate image;
+extern crate html5ever;
 
 mod strategies;
 mod util;
@@ -14,22 +15,14 @@ pub mod errors;
 
 use errors::*;
 
-use kuchiki::traits::*;
 use kuchiki::parse_html;
 
-use hyper::client::IntoUrl;
+use reqwest::IntoUrl;
 
 use image::GenericImage;
 use strategies::Strategy;
 use std::io::Read;
 use util::AsImageFormat;
-
-#[inline]
-fn accept_identity_encoding() -> hyper::header::AcceptEncoding {
-    use hyper::header::{AcceptEncoding, Encoding, qitem};
-    AcceptEncoding(vec![qitem(Encoding::Identity)])
-}
-
 
 pub struct IconScraper {
     document_url: url::Url,
@@ -38,16 +31,22 @@ pub struct IconScraper {
 
 impl IconScraper {
     pub fn from_http<I: IntoUrl>(url: I) -> Self {
-        use hyper::Client;
+        use html5ever::driver::BytesOpts;
+        use html5ever::encoding::label::encoding_from_whatwg_label;
+        use html5ever::tendril::TendrilSink;
 
         let url = url.into_url().unwrap();
-        let dom = {
-            let client = Client::new();
-            client.get(url.clone())
-                .header(accept_identity_encoding())
-                .send()
-                .and_then(|r| parse_html().from_http(r)).ok()
-        };
+        let dom = reqwest::get(url.clone())
+            .ok()
+            .and_then(|mut response| {
+                let parser = parse_html();
+                let opts = BytesOpts {
+                    transport_layer_encoding: response.headers().get::<reqwest::header::ContentType>()
+                        .and_then(|content_type| content_type.get_param(mime::Attr::Charset))
+                        .and_then(|charset| encoding_from_whatwg_label(charset))
+                };
+                parser.from_bytes(opts).read_from(&mut response).ok()
+            });
 
         IconScraper {
             document_url: url,
@@ -137,19 +136,14 @@ impl Icon {
             return Ok(());
         };
 
-        let client = hyper::client::Client::new();
-        let mut response = try!(client
-                                .get(self.url.clone())
-                                .header(accept_identity_encoding())
-                                .send());
-
+        let mut response = try!(reqwest::get(self.url.clone()));
         let mut bytes: Vec<u8> = vec![];
         try!(response.read_to_end(&mut bytes));
-        if !response.status.is_success() {
+        if !response.status().is_success() {
             return Err(ErrorKind::BadStatusCode(response).into());
         }
 
-        let mime_type: mime::Mime = match response.headers.get::<hyper::header::ContentType>().cloned() {
+        let mime_type: mime::Mime = match response.headers().get::<reqwest::header::ContentType>().cloned() {
             Some(x) => x.0,
             None => return Err(ErrorKind::NoContentType(response).into())
         };

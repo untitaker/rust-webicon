@@ -4,20 +4,20 @@ error_chain! {
     }
 
     foreign_links {
-        ::hyper::Error, Hyper;
+        ::reqwest::Error, Hyper;
         ::std::io::Error, Io;
         ::image::ImageError, Image;
     }
 
     errors {
-        BadStatusCode(response: ::hyper::client::response::Response) {
+        BadStatusCode(response: ::reqwest::Response) {
             description("Bad status code")
-            display("Bad status code: {}", response.status)
+            display("Bad status code: {}", response.status())
         }
-        NoContentType(response: ::hyper::client::response::Response) {
+        NoContentType(response: ::reqwest::Response) {
             description("No Content-Type found.")
         }
-        BadContentType(response: ::hyper::client::response::Response) {
+        BadContentType(response: ::reqwest::Response) {
             description("Invalid Content-Type for image.")
         }
     }

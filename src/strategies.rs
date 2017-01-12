@@ -29,7 +29,7 @@ impl Strategy for LinkRelStrategy {
 
         for data in dom.select("link[rel*=icon]").unwrap() {
             let attrs = data.attributes.borrow();
-            let href = match attrs.get(atom!("href")) {
+            let href = match attrs.get(local_name!("href")) {
                 Some(x) => x,
                 None => continue
             };
@@ -39,7 +39,7 @@ impl Strategy for LinkRelStrategy {
                 Err(_) => continue
             };
 
-            let mut sizes = attrs.get(atom!("sizes"))
+            let mut sizes = attrs.get(local_name!("sizes"))
                 .unwrap_or("")
                 .split('x')
                 .filter_map(|d| u32::from_str(d).ok());
