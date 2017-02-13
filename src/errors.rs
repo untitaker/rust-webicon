@@ -4,9 +4,9 @@ error_chain! {
     }
 
     foreign_links {
-        ::reqwest::Error, Hyper;
-        ::std::io::Error, Io;
-        ::image::ImageError, Image;
+        Hyper(::reqwest::Error);
+        Io(::std::io::Error);
+        Image(::image::ImageError);
     }
 
     errors {
